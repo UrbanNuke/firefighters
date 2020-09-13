@@ -9,8 +9,8 @@ namespace Player {
 		private Rigidbody _rb;
 		private Animator _animator;
 		
-		// камера и ее контроллер
-		private Camera _camera;
+		// камера для прицела и ее контроллер
+		public Camera cameraForAim;
 		private CameraController _cameraController;
 		
 		private ParticleSystem _fireHoseParticles;
@@ -32,10 +32,9 @@ namespace Player {
 		private void Start() {
 			_rb = GetComponent<Rigidbody>();
 			_animator = GetComponent<Animator>();
-			_camera = Camera.main;
 			_fireHoseParticles = transform.Find("FireHoseParticle").GetComponent<ParticleSystem>();
-			if (_camera != null) {
-				_cameraController = _camera.GetComponent<CameraController>();
+			if (cameraForAim != null) {
+				_cameraController = cameraForAim.GetComponent<CameraController>();
 			}
 		}
 		
@@ -44,9 +43,7 @@ namespace Player {
 			_inputMovement = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical")).normalized;
 
 			Vector3 mousePos = Input.mousePosition;
-			_aimPosition = _camera.ScreenToWorldPoint(
-				new Vector3(mousePos.x, mousePos.y + 100f, _cameraController.angleOfView)
-			);
+			_aimPosition = cameraForAim.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, _cameraController.angleOfView));
 			
 			Fire();
 		}
@@ -55,7 +52,8 @@ namespace Player {
 			Vector3 lookPos = _aimPosition - transform.position;
 			lookPos.y = 0;
 			var rotation = Quaternion.LookRotation(lookPos);
-			_rb.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * 5f);
+			float multiplier = _firing ? 0.25f : 5f;
+			_rb.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * multiplier);
 
 			if (!_firing) {
 				Vector3 movement = transform.TransformVector(_inputMovement * walkSpeed);
