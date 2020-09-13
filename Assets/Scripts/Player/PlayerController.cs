@@ -1,9 +1,18 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Linq;
+using UnityEngine;
 
 namespace Player {
 	public class PlayerController : MonoBehaviour {
 		/// <summary> Скорость передвижения персонажа </summary>
 		public float walkSpeed = 5f;
+
+		/// <summary> Здоровье игрока </summary>
+		public float Health {
+			get => _health;
+			private set => _health = value;
+		}
+		private float _health;
 		
 		// ссылки на другие компоненты gameObject
 		private Rigidbody _rb;
@@ -29,7 +38,7 @@ namespace Player {
 		private static readonly int VertSpeed = Animator.StringToHash("vertSpeed");
 		private static readonly int Firing = Animator.StringToHash("firing");
 
-		private void Start() {
+		void Start() {
 			_rb = GetComponent<Rigidbody>();
 			_animator = GetComponent<Animator>();
 			_fireHoseParticles = transform.Find("FireHoseParticle").GetComponent<ParticleSystem>();
@@ -38,7 +47,7 @@ namespace Player {
 			}
 		}
 		
-		private void Update() {
+		void Update() {
 			_inputMovement = Vector3.zero;
 			_inputMovement = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical")).normalized;
 
@@ -46,6 +55,10 @@ namespace Player {
 			_aimPosition = cameraForAim.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, _cameraController.angleOfView));
 			
 			Fire();
+		}
+		
+		void OnTriggerStay(Collider other) {
+			HitHandler(other);
 		}
 
 		private void FixedUpdate() {
@@ -76,6 +89,16 @@ namespace Player {
 				_firing = false;
 				_fireHoseParticles.Stop();
 			} 
+		}
+		
+		/// <summary>
+		/// Обработка получаемого урона 
+		/// </summary>
+		/// <param name="other"> Коллайдер от которого приходит урон </param>
+		private void HitHandler(Collider other) {
+			if (Enum.GetNames(typeof(FireTypes)).Contains(other.name)) {
+				Debug.Log("HIT");
+			}
 		}
 	}
 }
